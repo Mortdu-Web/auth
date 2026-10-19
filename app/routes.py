@@ -1,9 +1,11 @@
 from urllib.parse import urlencode
 
 import jwt
+import requests
 from authlib.integrations.flask_client import OAuth
 from flask import Blueprint, current_app, jsonify, redirect, request, session, url_for
 
+from . import keycloak_admin
 from .security import current_user, is_safe_redirect, user_from_claims
 
 bp = Blueprint("auth", __name__)
@@ -92,6 +94,18 @@ def check():
             return jsonify(authorized=False, reason="forbidden", required=required), 403
 
     return jsonify(authorized=True, user=user)
+
+
+@bp.get("/api/users")
+def users():
+    """Liste des utilisateurs Keycloak actifs (id, username, firstName, lastName). Reserve aux connectes."""
+    if not current_user():
+        return jsonify(error="not_authenticated"), 401
+    try:
+        return jsonify(users=keycloak_admin.list_users())
+    except requests.RequestException:
+        current_app.logger.exception("Keycloak injoignable ou droits insuffisants (view-users)")
+        return jsonify(error="keycloak_unavailable"), 502
 
 
 @bp.get("/health")

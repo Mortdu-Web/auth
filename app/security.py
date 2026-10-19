@@ -21,6 +21,8 @@ def user_from_claims(claims: dict, client_id: str) -> dict:
         "username": claims.get("preferred_username"),
         "email": claims.get("email"),
         "name": claims.get("name"),
+        "given_name": claims.get("given_name"),
+        "family_name": claims.get("family_name"),
         "roles": extract_roles(claims, client_id),
         "groups": claims.get("groups", []),
     }
